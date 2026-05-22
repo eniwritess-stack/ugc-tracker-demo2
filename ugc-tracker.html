@@ -1,0 +1,1264 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Loop — UGC Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0a0a0b;
+    --bg-elev: #101012;
+    --panel: #121215;
+    --panel-2: #16161a;
+    --hover: #1c1c21;
+    --border: #1f1f24;
+    --border-strong: #2a2a31;
+    --text: #ececf1;
+    --text-dim: #a1a1aa;
+    --text-mute: #6b6b76;
+    --accent: #7c5cff;
+    --accent-2: #5b8cff;
+    --accent-soft: rgba(124, 92, 255, 0.12);
+    --green: #34d399;
+    --green-soft: rgba(52, 211, 153, 0.12);
+    --amber: #fbbf24;
+    --amber-soft: rgba(251, 191, 36, 0.12);
+    --red: #f87171;
+    --red-soft: rgba(248, 113, 113, 0.12);
+    --blue: #60a5fa;
+    --blue-soft: rgba(96, 165, 250, 0.12);
+    --pink: #f472b6;
+    --pink-soft: rgba(244, 114, 182, 0.12);
+    --shadow-1: 0 1px 0 rgba(255,255,255,0.04) inset, 0 1px 2px rgba(0,0,0,0.5);
+    --shadow-2: 0 10px 30px rgba(0,0,0,0.45), 0 1px 0 rgba(255,255,255,0.04) inset;
+    --radius: 10px;
+    --radius-sm: 7px;
+    --radius-lg: 14px;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    font-size: 13.5px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    letter-spacing: -0.005em;
+    overflow-x: hidden;
+  }
+  ::selection { background: var(--accent-soft); color: var(--text); }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { background: #26262d; border-radius: 8px; }
+  ::-webkit-scrollbar-thumb:hover { background: #34343d; }
+  ::-webkit-scrollbar-track { background: transparent; }
+
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  input { font: inherit; color: inherit; }
+
+  /* ---------- Layout ---------- */
+  .app {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ---------- Sidebar ---------- */
+  .sidebar {
+    background: var(--bg-elev);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 14px 10px;
+    gap: 4px;
+    overflow-y: auto;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 6px 8px 12px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 10px;
+  }
+  .brand-mark {
+    width: 26px; height: 26px;
+    border-radius: 7px;
+    background: linear-gradient(135deg, #7c5cff, #5b8cff 60%, #34d399);
+    box-shadow: 0 4px 16px rgba(124, 92, 255, 0.35);
+    display: grid; place-items: center;
+    color: white; font-weight: 700; font-size: 13px;
+  }
+  .brand-name { font-weight: 600; font-size: 14px; letter-spacing: -0.01em; }
+  .brand-sub { font-size: 11px; color: var(--text-mute); font-weight: 450; margin-top: -2px; }
+
+  .nav-section { padding: 6px 8px 4px; color: var(--text-mute); font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; }
+  .nav-item {
+    display: flex; align-items: center; gap: 9px;
+    padding: 6px 8px;
+    border-radius: var(--radius-sm);
+    color: var(--text-dim);
+    font-size: 13px;
+    font-weight: 450;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.12s, color 0.12s;
+  }
+  .nav-item:hover { background: var(--hover); color: var(--text); }
+  .nav-item.active { background: var(--panel-2); color: var(--text); }
+  .nav-item.active .nav-icon { color: var(--accent); }
+  .nav-icon { width: 15px; height: 15px; color: var(--text-mute); flex-shrink: 0; }
+  .nav-item .nav-count { margin-left: auto; font-size: 11px; color: var(--text-mute); background: var(--panel-2); padding: 1px 6px; border-radius: 6px; }
+  .nav-item.active .nav-count { background: var(--accent-soft); color: var(--accent); }
+
+  .sidebar-footer {
+    margin-top: auto;
+    padding: 10px 6px 4px;
+    border-top: 1px solid var(--border);
+    display: flex; align-items: center; gap: 9px;
+  }
+  .avatar {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f472b6, #7c5cff);
+    color: white; font-size: 11px; font-weight: 600;
+    display: grid; place-items: center;
+    flex-shrink: 0;
+  }
+  .me-info { line-height: 1.25; flex: 1; min-width: 0; }
+  .me-name { font-size: 12.5px; font-weight: 500; }
+  .me-team { font-size: 11px; color: var(--text-mute); }
+  .me-cog { color: var(--text-mute); cursor: pointer; padding: 4px; border-radius: 6px; }
+  .me-cog:hover { background: var(--hover); color: var(--text); }
+
+  /* ---------- Main ---------- */
+  .main {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  /* Topbar */
+  .topbar {
+    height: 52px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center;
+    padding: 0 20px;
+    gap: 14px;
+    flex-shrink: 0;
+    background: var(--bg);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .crumbs { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-dim); }
+  .crumbs .sep { color: var(--text-mute); }
+  .crumbs .current { color: var(--text); font-weight: 500; }
+
+  .search {
+    margin-left: auto;
+    display: flex; align-items: center;
+    gap: 8px;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 5px 9px;
+    min-width: 240px;
+    transition: border-color 0.12s, background 0.12s;
+  }
+  .search:focus-within { border-color: var(--border-strong); background: var(--panel); }
+  .search input { border: 0; background: transparent; outline: none; flex: 1; font-size: 12.5px; color: var(--text); }
+  .search input::placeholder { color: var(--text-mute); }
+  .kbd { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--text-mute); border: 1px solid var(--border); padding: 1px 5px; border-radius: 4px; background: var(--bg); }
+
+  .icon-btn {
+    width: 30px; height: 30px;
+    border-radius: var(--radius-sm);
+    display: grid; place-items: center;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s;
+  }
+  .icon-btn:hover { background: var(--hover); color: var(--text); }
+  .icon-btn.has-dot { position: relative; }
+  .icon-btn.has-dot::after { content: ''; position: absolute; top: 7px; right: 7px; width: 6px; height: 6px; border-radius: 50%; background: var(--red); border: 2px solid var(--bg); }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 11px;
+    border-radius: var(--radius-sm);
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 12.5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s, transform 0.06s;
+  }
+  .btn:hover { background: var(--hover); border-color: var(--border-strong); }
+  .btn:active { transform: translateY(0.5px); }
+  .btn-primary {
+    background: var(--accent);
+    border-color: rgba(255,255,255,0.08);
+    color: white;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.15) inset, 0 4px 14px rgba(124, 92, 255, 0.35);
+  }
+  .btn-primary:hover { background: #8a6dff; border-color: rgba(255,255,255,0.12); }
+
+  /* Content scroll area */
+  .content {
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 22px 28px 60px;
+    flex: 1;
+  }
+
+  .page-head {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    gap: 14px; margin-bottom: 18px; flex-wrap: wrap;
+  }
+  .page-title { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 4px; }
+  .page-sub { font-size: 13px; color: var(--text-dim); margin: 0; }
+
+  /* ---------- KPI cards ---------- */
+  .kpis {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 22px;
+  }
+  .kpi {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 15px;
+    position: relative;
+    overflow: hidden;
+  }
+  .kpi::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(120% 80% at 100% 0%, rgba(124,92,255,0.06), transparent 60%);
+    pointer-events: none;
+  }
+  .kpi-label { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--text-dim); font-weight: 450; }
+  .kpi-label svg { width: 14px; height: 14px; }
+  .kpi-value { font-size: 24px; font-weight: 600; letter-spacing: -0.02em; margin: 8px 0 6px; font-feature-settings: 'tnum'; }
+  .kpi-meta { display: flex; align-items: center; gap: 6px; font-size: 11.5px; }
+  .delta { display: inline-flex; align-items: center; gap: 3px; font-weight: 500; padding: 1px 6px; border-radius: 5px; font-feature-settings: 'tnum'; }
+  .delta.up { color: var(--green); background: var(--green-soft); }
+  .delta.down { color: var(--red); background: var(--red-soft); }
+  .delta svg { width: 11px; height: 11px; }
+  .kpi-meta span { color: var(--text-mute); }
+
+  .kpi-spark { position: absolute; right: 12px; bottom: 10px; opacity: 0.7; }
+
+  /* ---------- Section ---------- */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+  .grid-2-eq {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .card-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 13px 16px;
+    border-bottom: 1px solid var(--border);
+    gap: 10px;
+  }
+  .card-title { font-size: 13.5px; font-weight: 600; letter-spacing: -0.005em; display: flex; align-items: center; gap: 8px; }
+  .card-title .pill { font-size: 10.5px; font-weight: 500; padding: 1px 7px; border-radius: 5px; background: var(--accent-soft); color: var(--accent); }
+  .card-actions { display: flex; align-items: center; gap: 6px; }
+  .seg {
+    display: inline-flex; padding: 2px; background: var(--panel-2); border: 1px solid var(--border); border-radius: 7px;
+  }
+  .seg button {
+    padding: 3px 9px; font-size: 11.5px; color: var(--text-mute); border-radius: 5px; font-weight: 500;
+  }
+  .seg button.on { background: var(--bg-elev); color: var(--text); box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset; }
+  .seg button:hover:not(.on) { color: var(--text-dim); }
+
+  .card-body { padding: 14px 16px; }
+
+  /* Chart */
+  .chart {
+    height: 220px;
+    position: relative;
+  }
+  .chart svg { width: 100%; height: 100%; display: block; }
+  .chart-axis { fill: var(--text-mute); font-size: 10px; font-family: 'JetBrains Mono', monospace; }
+  .chart-grid line { stroke: var(--border); stroke-dasharray: 2 4; }
+  .chart-tip {
+    position: absolute;
+    background: var(--bg-elev);
+    border: 1px solid var(--border-strong);
+    padding: 6px 9px;
+    border-radius: 7px;
+    font-size: 11.5px;
+    pointer-events: none;
+    box-shadow: var(--shadow-2);
+    transform: translate(-50%, -110%);
+    white-space: nowrap;
+    opacity: 0; transition: opacity 0.1s;
+  }
+  .chart-tip.on { opacity: 1; }
+  .chart-tip .tip-val { font-weight: 600; color: var(--text); font-feature-settings: 'tnum'; }
+  .chart-tip .tip-lbl { color: var(--text-mute); font-size: 10.5px; }
+
+  .legend { display: flex; gap: 12px; flex-wrap: wrap; }
+  .legend-item { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--text-dim); }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  /* ---------- Table ---------- */
+  .table-wrap { overflow-x: auto; }
+  table.tbl { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12.5px; }
+  .tbl thead th {
+    text-align: left;
+    padding: 9px 12px;
+    color: var(--text-mute);
+    font-weight: 500;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    background: var(--panel-2);
+    border-bottom: 1px solid var(--border);
+    border-top: 1px solid var(--border);
+    position: sticky; top: 0;
+    white-space: nowrap;
+  }
+  .tbl tbody td {
+    padding: 11px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .tbl tbody tr { transition: background 0.1s; cursor: pointer; }
+  .tbl tbody tr:hover { background: var(--panel-2); }
+  .tbl tbody tr:last-child td { border-bottom: 0; }
+
+  .creator-cell { display: flex; align-items: center; gap: 10px; min-width: 180px; }
+  .creator-cell .avatar { width: 28px; height: 28px; font-size: 11px; }
+  .creator-name { font-weight: 500; font-size: 13px; color: var(--text); }
+  .creator-handle { font-size: 11px; color: var(--text-mute); font-family: 'JetBrains Mono', monospace; }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 11px; font-weight: 500;
+    padding: 2px 8px; border-radius: 5px;
+    line-height: 1.5;
+    white-space: nowrap;
+  }
+  .badge .dot { width: 5px; height: 5px; border-radius: 50%; }
+  .b-green { background: var(--green-soft); color: var(--green); }
+  .b-green .dot { background: var(--green); }
+  .b-amber { background: var(--amber-soft); color: var(--amber); }
+  .b-amber .dot { background: var(--amber); }
+  .b-red { background: var(--red-soft); color: var(--red); }
+  .b-red .dot { background: var(--red); }
+  .b-blue { background: var(--blue-soft); color: var(--blue); }
+  .b-blue .dot { background: var(--blue); }
+  .b-pink { background: var(--pink-soft); color: var(--pink); }
+  .b-pink .dot { background: var(--pink); }
+  .b-mute { background: var(--panel-2); color: var(--text-dim); border: 1px solid var(--border); }
+  .b-mute .dot { background: var(--text-mute); }
+  .b-violet { background: var(--accent-soft); color: var(--accent); }
+  .b-violet .dot { background: var(--accent); }
+
+  .platform-chip {
+    width: 22px; height: 22px;
+    border-radius: 6px;
+    display: inline-grid; place-items: center;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+  }
+  .platform-chip svg { width: 13px; height: 13px; }
+  .platform-stack { display: inline-flex; }
+  .platform-stack .platform-chip + .platform-chip { margin-left: -6px; }
+
+  .num { font-feature-settings: 'tnum'; color: var(--text); }
+  .num-mute { color: var(--text-dim); font-feature-settings: 'tnum'; }
+
+  .progress {
+    height: 5px; width: 100%;
+    background: var(--panel-2);
+    border-radius: 3px; overflow: hidden;
+  }
+  .progress > span {
+    display: block; height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    border-radius: 3px;
+  }
+  .progress.amber > span { background: linear-gradient(90deg, var(--amber), var(--pink)); }
+  .progress.green > span { background: linear-gradient(90deg, var(--green), var(--blue)); }
+
+  /* ---------- Campaigns ---------- */
+  .campaigns { display: grid; gap: 10px; }
+  .campaign {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 13px;
+    background: var(--panel-2);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 6px 12px;
+    align-items: center;
+    transition: border-color 0.12s, background 0.12s;
+  }
+  .campaign:hover { border-color: var(--border-strong); background: #1a1a1f; }
+  .campaign-name { font-weight: 500; font-size: 13px; display: flex; align-items: center; gap: 8px; }
+  .campaign-meta { font-size: 11.5px; color: var(--text-mute); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .campaign-meta .sep-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--text-mute); }
+  .campaign-prog {
+    grid-column: 1 / -1;
+    display: flex; align-items: center; gap: 10px;
+    font-size: 11px; color: var(--text-mute);
+  }
+  .campaign-prog .progress { flex: 1; }
+
+  /* ---------- Approvals ---------- */
+  .approvals { display: grid; gap: 8px; }
+  .approval {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    transition: background 0.12s;
+    cursor: pointer;
+    border: 1px solid transparent;
+  }
+  .approval:hover { background: var(--panel-2); border-color: var(--border); }
+  .thumb {
+    width: 44px; height: 56px; border-radius: 6px;
+    background: linear-gradient(135deg, #2a2a31, #16161a);
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .thumb::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: var(--g, linear-gradient(135deg, #7c5cff44, #5b8cff44));
+  }
+  .thumb svg.play {
+    position: absolute; left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    width: 18px; height: 18px;
+    color: white;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
+  }
+  .approval-info { flex: 1; min-width: 0; }
+  .approval-title { font-size: 12.5px; font-weight: 500; margin-bottom: 3px; display: -webkit-box; -webkit-line-clamp: 1; line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+  .approval-sub { font-size: 11px; color: var(--text-mute); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .approval-actions { display: flex; gap: 5px; flex-shrink: 0; }
+  .approval-actions .icon-btn { width: 26px; height: 26px; }
+  .approval-actions .approve { color: var(--green); }
+  .approval-actions .approve:hover { background: var(--green-soft); }
+  .approval-actions .reject { color: var(--red); }
+  .approval-actions .reject:hover { background: var(--red-soft); }
+
+  /* ---------- Payments ---------- */
+  .payments-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .pay-stat {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+  }
+  .pay-stat .label { font-size: 11px; color: var(--text-mute); margin-bottom: 4px; }
+  .pay-stat .value { font-size: 18px; font-weight: 600; font-feature-settings: 'tnum'; letter-spacing: -0.01em; }
+  .pay-stat .value .currency { color: var(--text-mute); font-weight: 500; font-size: 13px; margin-right: 2px; }
+  .pay-stat.green .value { color: var(--green); }
+  .pay-stat.amber .value { color: var(--amber); }
+
+  /* Mobile menu trigger */
+  .menu-trigger { display: none; }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 1100px) {
+    .grid-2 { grid-template-columns: 1fr; }
+    .kpis { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 880px) {
+    .app { grid-template-columns: 1fr; }
+    .sidebar {
+      position: fixed; inset: 0 auto 0 0;
+      width: 270px;
+      z-index: 50;
+      transform: translateX(-100%);
+      transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 0 40px rgba(0,0,0,0.5);
+    }
+    body.menu-open .sidebar { transform: translateX(0); }
+    body.menu-open::after {
+      content: ''; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+      z-index: 40; backdrop-filter: blur(2px);
+    }
+    .menu-trigger {
+      display: grid;
+    }
+    .topbar { padding: 0 14px; gap: 10px; }
+    .search { min-width: 0; flex: 1; }
+    .search .kbd { display: none; }
+    .crumbs .crumb-hide { display: none; }
+    .content { padding: 16px 14px 60px; }
+    .grid-2-eq { grid-template-columns: 1fr; }
+    .payments-grid { grid-template-columns: 1fr; }
+    .page-title { font-size: 19px; }
+    .topbar .new-text { display: none; }
+  }
+  @media (max-width: 560px) {
+    .kpis { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .kpi { padding: 12px; }
+    .kpi-value { font-size: 20px; }
+    .kpi-spark { display: none; }
+    body { font-size: 13px; }
+    .card-head { padding: 11px 13px; flex-wrap: wrap; }
+    .card-body { padding: 12px 13px; }
+    .seg { font-size: 10.5px; }
+    .approval-actions { gap: 2px; }
+    .approval-actions .icon-btn { width: 24px; height: 24px; }
+  }
+
+  /* Animations */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .kpi, .card { animation: fadeUp 0.4s cubic-bezier(0.2, 0.7, 0.3, 1) both; }
+  .kpi:nth-child(1) { animation-delay: 0.02s; }
+  .kpi:nth-child(2) { animation-delay: 0.05s; }
+  .kpi:nth-child(3) { animation-delay: 0.08s; }
+  .kpi:nth-child(4) { animation-delay: 0.11s; }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 22px; left: 50%;
+    transform: translate(-50%, 16px);
+    background: var(--bg-elev);
+    border: 1px solid var(--border-strong);
+    border-radius: 9px;
+    padding: 9px 14px;
+    font-size: 12.5px;
+    color: var(--text);
+    box-shadow: var(--shadow-2);
+    z-index: 100;
+    opacity: 0;
+    transition: transform 0.22s, opacity 0.22s;
+    display: flex; align-items: center; gap: 8px;
+    pointer-events: none;
+  }
+  .toast.on { opacity: 1; transform: translate(-50%, 0); }
+  .toast svg { width: 14px; height: 14px; color: var(--green); }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- ============== SIDEBAR ============== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-mark">L</div>
+      <div>
+        <div class="brand-name">Loop</div>
+        <div class="brand-sub">UGC Tracker</div>
+      </div>
+    </div>
+
+    <div class="nav-section">Workspace</div>
+    <div class="nav-item active">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+      Overview
+    </div>
+    <div class="nav-item">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Creators
+      <span class="nav-count">42</span>
+    </div>
+    <div class="nav-item">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h18l-2 13H5z"/><path d="M3 3l-1-1H0"/><circle cx="9" cy="20" r="1.5"/><circle cx="17" cy="20" r="1.5"/></svg>
+      Campaigns
+      <span class="nav-count">7</span>
+    </div>
+    <div class="nav-item">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Content Library
+      <span class="nav-count">218</span>
+    </div>
+    <div class="nav-item">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Performance
+    </div>
+    <div class="nav-item">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+      Payments
+      <span class="nav-count">3</span>
+    </div>
+    <div class="nav-item">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      Approvals
+      <span class="nav-count">12</span>
+    </div>
+
+    <div class="nav-section" style="margin-top: 10px;">Workflows</div>
+    <div class="nav-item">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Automations
+    </div>
+    <div class="nav-item">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+      Inbox
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="avatar">JG</div>
+      <div class="me-info">
+        <div class="me-name">Julian G.</div>
+        <div class="me-team">Acme Studios</div>
+      </div>
+      <div class="me-cog">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============== MAIN ============== -->
+  <main class="main">
+    <header class="topbar">
+      <div class="icon-btn menu-trigger" id="menuBtn" aria-label="Open menu">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </div>
+      <div class="crumbs">
+        <span class="crumb-hide">Acme Studios</span>
+        <span class="sep crumb-hide">/</span>
+        <span class="current">Overview</span>
+      </div>
+      <label class="search">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-mute)"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input placeholder="Search creators, campaigns, content…" />
+        <span class="kbd">⌘K</span>
+      </label>
+      <div class="icon-btn has-dot" title="Notifications">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      </div>
+      <button class="btn btn-primary" id="newBtn">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <span class="new-text">New Brief</span>
+      </button>
+    </header>
+
+    <div class="content">
+
+      <div class="page-head">
+        <div>
+          <h1 class="page-title">Overview</h1>
+          <p class="page-sub">May 1 – May 22, 2026 · 7 active campaigns · 42 creators</p>
+        </div>
+        <div class="seg" id="rangeSeg">
+          <button data-r="7">7d</button>
+          <button class="on" data-r="30">30d</button>
+          <button data-r="90">90d</button>
+          <button data-r="365">YTD</button>
+        </div>
+      </div>
+
+      <!-- KPIs -->
+      <section class="kpis">
+        <div class="kpi">
+          <div class="kpi-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent)"><path d="M23 6l-9.5 9.5-5-5L1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+            Total Reach
+          </div>
+          <div class="kpi-value">14.82M</div>
+          <div class="kpi-meta">
+            <span class="delta up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="6 15 12 9 18 15"/></svg>22.4%</span>
+            <span>vs prev. period</span>
+          </div>
+          <svg class="kpi-spark" width="60" height="22" viewBox="0 0 60 22"><polyline fill="none" stroke="#7c5cff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" points="0,17 8,13 15,15 22,9 30,11 37,6 45,8 52,3 60,5"/></svg>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:var(--green)"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            Avg Engagement
+          </div>
+          <div class="kpi-value">6.84%</div>
+          <div class="kpi-meta">
+            <span class="delta up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="6 15 12 9 18 15"/></svg>1.2pt</span>
+            <span>industry: 3.1%</span>
+          </div>
+          <svg class="kpi-spark" width="60" height="22" viewBox="0 0 60 22"><polyline fill="none" stroke="#34d399" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" points="0,14 8,16 15,11 22,13 30,8 37,9 45,5 52,7 60,4"/></svg>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:var(--blue)"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            Content Shipped
+          </div>
+          <div class="kpi-value">218</div>
+          <div class="kpi-meta">
+            <span class="delta up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="6 15 12 9 18 15"/></svg>34</span>
+            <span>this period</span>
+          </div>
+          <svg class="kpi-spark" width="60" height="22" viewBox="0 0 60 22"><polyline fill="none" stroke="#60a5fa" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" points="0,18 8,15 15,17 22,12 30,14 37,10 45,11 52,6 60,8"/></svg>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:var(--amber)"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            Spend MTD
+          </div>
+          <div class="kpi-value">$48,920</div>
+          <div class="kpi-meta">
+            <span class="delta down"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>3.1%</span>
+            <span>$12.2k pending</span>
+          </div>
+          <svg class="kpi-spark" width="60" height="22" viewBox="0 0 60 22"><polyline fill="none" stroke="#fbbf24" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" points="0,8 8,12 15,9 22,14 30,11 37,15 45,12 52,17 60,14"/></svg>
+        </div>
+      </section>
+
+      <!-- Performance chart + approvals -->
+      <section class="grid-2">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">
+              Performance
+              <span class="pill">LIVE</span>
+            </div>
+            <div class="card-actions">
+              <div class="legend">
+                <span class="legend-item"><span class="legend-dot" style="background:#7c5cff"></span>Views</span>
+                <span class="legend-item"><span class="legend-dot" style="background:#34d399"></span>Engagement</span>
+              </div>
+              <div class="seg" id="metricSeg">
+                <button class="on" data-m="views">Views</button>
+                <button data-m="eng">Eng.</button>
+                <button data-m="conv">Conv.</button>
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="chart" id="chart">
+              <svg viewBox="0 0 600 220" preserveAspectRatio="none" id="chartSvg"></svg>
+              <div class="chart-tip" id="tip"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">
+              Content Approvals
+              <span class="pill" style="background: var(--amber-soft); color: var(--amber);">12 PENDING</span>
+            </div>
+            <div class="card-actions">
+              <button class="btn" style="padding: 4px 9px;">View all</button>
+            </div>
+          </div>
+          <div class="card-body" style="padding: 8px 8px;">
+            <div class="approvals" id="approvalsList"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Creators table -->
+      <section class="card" style="margin-bottom: 14px;">
+        <div class="card-head">
+          <div class="card-title">
+            Creator Roster
+            <span style="font-size: 11.5px; font-weight: 450; color: var(--text-mute); margin-left: 4px;">42 total</span>
+          </div>
+          <div class="card-actions">
+            <button class="btn">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+              Filter
+            </button>
+            <button class="btn">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M7 12h10M10 18h4"/></svg>
+              Sort
+            </button>
+            <button class="btn btn-primary">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Invite
+            </button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="tbl" id="creatorTable">
+            <thead>
+              <tr>
+                <th>Creator</th>
+                <th>Status</th>
+                <th>Tier</th>
+                <th>Platforms</th>
+                <th>Campaign</th>
+                <th style="text-align:right">Posts</th>
+                <th style="text-align:right">Views</th>
+                <th style="text-align:right">Engagement</th>
+                <th style="text-align:right">Earnings</th>
+                <th>Progress</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Campaigns + Payments -->
+      <section class="grid-2-eq">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Active Campaigns</div>
+            <div class="card-actions">
+              <button class="btn" style="padding: 4px 9px;">All campaigns</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="campaigns" id="campaignList"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">
+              Payments
+              <span class="pill" style="background:var(--amber-soft); color:var(--amber)">3 DUE</span>
+            </div>
+            <div class="card-actions">
+              <button class="btn">Export</button>
+              <button class="btn btn-primary">Pay all</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="payments-grid">
+              <div class="pay-stat green">
+                <div class="label">Paid (May)</div>
+                <div class="value"><span class="currency">$</span>36,720</div>
+              </div>
+              <div class="pay-stat amber">
+                <div class="label">Pending</div>
+                <div class="value"><span class="currency">$</span>12,200</div>
+              </div>
+              <div class="pay-stat">
+                <div class="label">Avg / creator</div>
+                <div class="value"><span class="currency">$</span>1,165</div>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table class="tbl" id="paymentTable">
+                <thead>
+                  <tr>
+                    <th>Creator</th>
+                    <th>Invoice</th>
+                    <th>Due</th>
+                    <th style="text-align:right">Amount</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+  <span id="toastMsg">Saved</span>
+</div>
+
+<script>
+/* ---------------- DEMO DATA ---------------- */
+
+const creators = [
+  { name: 'Maya Chen', handle: '@mayacreates', initials: 'MC', color: 'linear-gradient(135deg,#f472b6,#7c5cff)', status: ['green','Active'], tier: 'Diamond', platforms: ['tiktok','instagram','youtube'], campaign: 'Summer Glow Launch', posts: 18, views: '2.4M', eng: '8.9%', earnings: '$8,400', progress: 92 },
+  { name: 'Jordan Reyes', handle: '@jordanfilms', initials: 'JR', color: 'linear-gradient(135deg,#60a5fa,#34d399)', status: ['blue','In Review'], tier: 'Gold', platforms: ['tiktok','instagram'], campaign: 'Hydration Refresh', posts: 12, views: '1.1M', eng: '7.2%', earnings: '$4,200', progress: 68 },
+  { name: 'Sasha Volkov', handle: '@sashafit', initials: 'SV', color: 'linear-gradient(135deg,#fbbf24,#f472b6)', status: ['green','Active'], tier: 'Diamond', platforms: ['instagram','youtube'], campaign: 'Pro Athlete Series', posts: 14, views: '1.8M', eng: '6.4%', earnings: '$6,800', progress: 80 },
+  { name: 'Lena Park', handle: '@lenaeats', initials: 'LP', color: 'linear-gradient(135deg,#34d399,#60a5fa)', status: ['amber','Briefing'], tier: 'Silver', platforms: ['tiktok'], campaign: 'Summer Glow Launch', posts: 4, views: '342K', eng: '9.1%', earnings: '$1,200', progress: 28 },
+  { name: 'Devon Walsh', handle: '@devonwalsh', initials: 'DW', color: 'linear-gradient(135deg,#7c5cff,#f472b6)', status: ['green','Active'], tier: 'Gold', platforms: ['youtube','tiktok'], campaign: 'Pro Athlete Series', posts: 9, views: '890K', eng: '5.8%', earnings: '$3,600', progress: 64 },
+  { name: 'Ana Martins', handle: '@anamartins', initials: 'AM', color: 'linear-gradient(135deg,#f87171,#fbbf24)', status: ['red','Off-track'], tier: 'Silver', platforms: ['instagram'], campaign: 'Hydration Refresh', posts: 2, views: '110K', eng: '4.2%', earnings: '$600', progress: 18 },
+  { name: 'Kai Tanaka', handle: '@kaitanaka', initials: 'KT', color: 'linear-gradient(135deg,#5b8cff,#34d399)', status: ['green','Active'], tier: 'Diamond', platforms: ['tiktok','instagram','youtube'], campaign: 'Back-to-School', posts: 16, views: '2.1M', eng: '7.8%', earnings: '$7,200', progress: 88 },
+  { name: 'Priya Iyer', handle: '@priya.iyer', initials: 'PI', color: 'linear-gradient(135deg,#fbbf24,#34d399)', status: ['amber','Briefing'], tier: 'Gold', platforms: ['instagram','tiktok'], campaign: 'Back-to-School', posts: 6, views: '480K', eng: '6.9%', earnings: '$2,400', progress: 42 },
+];
+
+const campaigns = [
+  { name: 'Summer Glow Launch', status: ['violet','Live'], creators: 12, content: '48/60', budget: '$18,400', spent: '$14,200', deadline: 'Jun 4', progress: 76 },
+  { name: 'Pro Athlete Series', status: ['violet','Live'], creators: 8, content: '32/40', budget: '$22,000', spent: '$16,800', deadline: 'Jun 18', progress: 80 },
+  { name: 'Hydration Refresh', status: ['amber','At Risk'], creators: 6, content: '14/30', budget: '$9,500', spent: '$5,800', deadline: 'May 30', progress: 47 },
+  { name: 'Back-to-School', status: ['blue','Planning'], creators: 10, content: '8/45', budget: '$14,000', spent: '$2,100', deadline: 'Aug 12', progress: 18 },
+];
+
+const approvals = [
+  { title: 'Morning routine — get ready with me', creator: 'Maya Chen', time: '12m ago', platform: 'TikTok', g: 'linear-gradient(135deg,#f472b660,#7c5cff60)' },
+  { title: 'Hydration check at the gym', creator: 'Sasha Volkov', time: '38m ago', platform: 'Reels', g: 'linear-gradient(135deg,#fbbf2460,#f472b660)' },
+  { title: 'Behind the launch — day in life', creator: 'Kai Tanaka', time: '1h ago', platform: 'YouTube Shorts', g: 'linear-gradient(135deg,#5b8cff60,#34d39960)' },
+  { title: 'Unboxing the summer drop', creator: 'Jordan Reyes', time: '2h ago', platform: 'TikTok', g: 'linear-gradient(135deg,#60a5fa60,#34d39960)' },
+  { title: '5-minute desk stretch routine', creator: 'Priya Iyer', time: '3h ago', platform: 'Reels', g: 'linear-gradient(135deg,#fbbf2460,#34d39960)' },
+];
+
+const payments = [
+  { creator: 'Maya Chen', initials: 'MC', color: 'linear-gradient(135deg,#f472b6,#7c5cff)', invoice: 'INV-0421', due: 'May 24', amount: '$4,200', status: ['amber','Due'] },
+  { creator: 'Kai Tanaka', initials: 'KT', color: 'linear-gradient(135deg,#5b8cff,#34d399)', invoice: 'INV-0420', due: 'May 25', amount: '$3,600', status: ['amber','Due'] },
+  { creator: 'Sasha Volkov', initials: 'SV', color: 'linear-gradient(135deg,#fbbf24,#f472b6)', invoice: 'INV-0419', due: 'May 26', amount: '$4,400', status: ['amber','Due'] },
+  { creator: 'Devon Walsh', initials: 'DW', color: 'linear-gradient(135deg,#7c5cff,#f472b6)', invoice: 'INV-0415', due: 'May 18', amount: '$1,800', status: ['green','Paid'] },
+  { creator: 'Lena Park', initials: 'LP', color: 'linear-gradient(135deg,#34d399,#60a5fa)', invoice: 'INV-0414', due: 'May 15', amount: '$1,200', status: ['green','Paid'] },
+];
+
+/* ---------------- ICONS ---------------- */
+const platformIcons = {
+  tiktok: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.5 7.6a6.4 6.4 0 0 1-3.7-1.2v7.5a5.6 5.6 0 1 1-5.6-5.6c.3 0 .6 0 .9.1v2.7a3 3 0 1 0 2.1 2.8V2h2.6a3.8 3.8 0 0 0 3.7 3.4v2.2z"/></svg>`,
+  instagram: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="3.6"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>`,
+  youtube: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M22.5 7.2a2.8 2.8 0 0 0-2-2C18.7 4.7 12 4.7 12 4.7s-6.7 0-8.5.5a2.8 2.8 0 0 0-2 2A29 29 0 0 0 1 12a29 29 0 0 0 .5 4.8 2.8 2.8 0 0 0 2 2c1.8.5 8.5.5 8.5.5s6.7 0 8.5-.5a2.8 2.8 0 0 0 2-2A29 29 0 0 0 23 12a29 29 0 0 0-.5-4.8zM10 15.5v-7l6 3.5z"/></svg>`,
+};
+
+/* ---------------- RENDER ---------------- */
+
+function badge(arr) {
+  return `<span class="badge b-${arr[0]}"><span class="dot"></span>${arr[1]}</span>`;
+}
+
+function platforms(list) {
+  return `<span class="platform-stack">${list.map(p => `<span class="platform-chip" title="${p}">${platformIcons[p]}</span>`).join('')}</span>`;
+}
+
+function renderCreators() {
+  const tbody = document.querySelector('#creatorTable tbody');
+  tbody.innerHTML = creators.map(c => `
+    <tr>
+      <td>
+        <div class="creator-cell">
+          <div class="avatar" style="background:${c.color}">${c.initials}</div>
+          <div>
+            <div class="creator-name">${c.name}</div>
+            <div class="creator-handle">${c.handle}</div>
+          </div>
+        </div>
+      </td>
+      <td>${badge(c.status)}</td>
+      <td><span class="badge ${c.tier === 'Diamond' ? 'b-violet' : c.tier === 'Gold' ? 'b-amber' : 'b-mute'}"><span class="dot"></span>${c.tier}</span></td>
+      <td>${platforms(c.platforms)}</td>
+      <td class="num-mute">${c.campaign}</td>
+      <td style="text-align:right" class="num">${c.posts}</td>
+      <td style="text-align:right" class="num">${c.views}</td>
+      <td style="text-align:right" class="num">${c.eng}</td>
+      <td style="text-align:right" class="num">${c.earnings}</td>
+      <td style="min-width:130px">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <div class="progress ${c.progress < 30 ? 'amber' : c.progress > 80 ? 'green' : ''}"><span style="width:${c.progress}%"></span></div>
+          <span style="font-size:11px; color:var(--text-mute); font-feature-settings:'tnum'; min-width: 26px; text-align:right;">${c.progress}%</span>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function renderCampaigns() {
+  const el = document.getElementById('campaignList');
+  el.innerHTML = campaigns.map(c => `
+    <div class="campaign">
+      <div>
+        <div class="campaign-name">${c.name} ${badge(c.status)}</div>
+        <div class="campaign-meta">
+          <span>${c.creators} creators</span>
+          <span class="sep-dot"></span>
+          <span>${c.content} content</span>
+          <span class="sep-dot"></span>
+          <span>${c.spent} / ${c.budget}</span>
+          <span class="sep-dot"></span>
+          <span>Due ${c.deadline}</span>
+        </div>
+      </div>
+      <div style="font-size: 12px; color: var(--text-dim); font-feature-settings:'tnum'; font-weight: 500;">${c.progress}%</div>
+      <div class="campaign-prog">
+        <div class="progress ${c.progress < 30 ? 'amber' : c.progress > 70 ? 'green' : ''}"><span style="width:${c.progress}%"></span></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderApprovals() {
+  const el = document.getElementById('approvalsList');
+  el.innerHTML = approvals.map((a, i) => `
+    <div class="approval" data-i="${i}">
+      <div class="thumb" style="--g:${a.g}">
+        <svg class="play" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20"/></svg>
+      </div>
+      <div class="approval-info">
+        <div class="approval-title">${a.title}</div>
+        <div class="approval-sub">
+          <span>${a.creator}</span>
+          <span class="sep-dot" style="width:3px;height:3px;border-radius:50%;background:var(--text-mute);display:inline-block"></span>
+          <span>${a.platform}</span>
+          <span class="sep-dot" style="width:3px;height:3px;border-radius:50%;background:var(--text-mute);display:inline-block"></span>
+          <span>${a.time}</span>
+        </div>
+      </div>
+      <div class="approval-actions">
+        <button class="icon-btn reject" title="Reject" data-act="reject" data-i="${i}">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+        <button class="icon-btn approve" title="Approve" data-act="approve" data-i="${i}">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </button>
+      </div>
+    </div>
+  `).join('');
+  el.querySelectorAll('button[data-act]').forEach(b => {
+    b.addEventListener('click', e => {
+      e.stopPropagation();
+      const act = b.dataset.act;
+      const i = +b.dataset.i;
+      const row = el.querySelector(`.approval[data-i="${i}"]`);
+      row.style.transition = 'opacity 0.2s, transform 0.2s';
+      row.style.opacity = '0';
+      row.style.transform = 'translateX(' + (act === 'approve' ? '12px' : '-12px') + ')';
+      setTimeout(() => row.remove(), 200);
+      toast(act === 'approve' ? 'Content approved' : 'Content rejected');
+    });
+  });
+}
+
+function renderPayments() {
+  const tbody = document.querySelector('#paymentTable tbody');
+  tbody.innerHTML = payments.map(p => `
+    <tr>
+      <td>
+        <div class="creator-cell">
+          <div class="avatar" style="background:${p.color}; width:24px; height:24px; font-size:10px;">${p.initials}</div>
+          <div class="creator-name" style="font-size:12.5px">${p.creator}</div>
+        </div>
+      </td>
+      <td><span class="num-mute" style="font-family:'JetBrains Mono',monospace; font-size:11.5px">${p.invoice}</span></td>
+      <td class="num-mute">${p.due}</td>
+      <td style="text-align:right" class="num" style="font-weight:500">${p.amount}</td>
+      <td>${badge(p.status)}</td>
+    </tr>
+  `).join('');
+}
+
+/* ---------------- CHART ---------------- */
+
+function generateSeries(n, base, vol, trend) {
+  const out = [];
+  let v = base;
+  for (let i = 0; i < n; i++) {
+    v += (Math.random() - 0.5) * vol + trend;
+    v = Math.max(base * 0.3, v);
+    out.push(v);
+  }
+  return out;
+}
+
+const chartData = {
+  views: { a: generateSeries(30, 380, 90, 4.5), b: generateSeries(30, 5.2, 1.2, 0.04) },
+  eng:   { a: generateSeries(30, 6.5, 1.0, 0.03), b: generateSeries(30, 4.8, 0.8, 0.02) },
+  conv:  { a: generateSeries(30, 2.4, 0.5, 0.02), b: generateSeries(30, 1.6, 0.4, 0.01) },
+};
+
+let activeMetric = 'views';
+
+function renderChart() {
+  const svg = document.getElementById('chartSvg');
+  const W = 600, H = 220, P = 32;
+  const data = chartData[activeMetric];
+  const a = data.a, b = data.b;
+  const allA = a, allB = b;
+  const max = Math.max(...allA, ...allB) * 1.1;
+  const min = 0;
+
+  const x = i => P + (i / (a.length - 1)) * (W - P - 10);
+  const y = v => H - P - ((v - min) / (max - min)) * (H - P - 14);
+
+  // Grid + axis
+  let grid = '<g class="chart-grid">';
+  let axis = '<g class="chart-axis">';
+  for (let i = 0; i <= 4; i++) {
+    const gy = P + (i / 4) * (H - P - 14);
+    grid += `<line x1="${P}" x2="${W - 10}" y1="${gy}" y2="${gy}"/>`;
+    const val = max - (i / 4) * (max - min);
+    let label;
+    if (activeMetric === 'views') label = (val >= 1000 ? (val / 1000).toFixed(1) + 'M' : Math.round(val) + 'K');
+    else label = val.toFixed(1) + '%';
+    axis += `<text x="${P - 6}" y="${gy + 3}" text-anchor="end">${label}</text>`;
+  }
+  grid += '</g>'; axis += '</g>';
+
+  // X axis labels
+  axis += '<g class="chart-axis">';
+  for (let i = 0; i < a.length; i += 5) {
+    const day = i + 1;
+    axis += `<text x="${x(i)}" y="${H - 8}" text-anchor="middle">${day}</text>`;
+  }
+  axis += '</g>';
+
+  // Area + line A (primary)
+  const lineA = a.map((v, i) => `${i ? 'L' : 'M'} ${x(i)} ${y(v)}`).join(' ');
+  const areaA = lineA + ` L ${x(a.length - 1)} ${H - P} L ${x(0)} ${H - P} Z`;
+
+  // Line B (secondary)
+  const lineB = b.map((v, i) => `${i ? 'L' : 'M'} ${x(i)} ${y(v)}`).join(' ');
+
+  // Hover layer
+  let hoverPts = '';
+  for (let i = 0; i < a.length; i++) {
+    hoverPts += `<rect x="${x(i) - 9}" y="${P}" width="18" height="${H - P - 14}" fill="transparent" data-i="${i}" class="hover-rect"/>`;
+  }
+
+  svg.innerHTML = `
+    <defs>
+      <linearGradient id="gradA" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#7c5cff" stop-opacity="0.32"/>
+        <stop offset="100%" stop-color="#7c5cff" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    ${grid}
+    ${axis}
+    <path d="${areaA}" fill="url(#gradA)" />
+    <path d="${lineA}" fill="none" stroke="#7c5cff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="${lineB}" fill="none" stroke="#34d399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 3" opacity="0.85"/>
+    <g id="dot"></g>
+    ${hoverPts}
+  `;
+
+  // Hover
+  const tip = document.getElementById('tip');
+  const dot = svg.querySelector('#dot');
+  svg.querySelectorAll('.hover-rect').forEach(rect => {
+    rect.addEventListener('mouseenter', () => {
+      const i = +rect.dataset.i;
+      const va = a[i], vb = b[i];
+      const px = x(i), py = y(va);
+      dot.innerHTML = `
+        <circle cx="${px}" cy="${py}" r="4.5" fill="#7c5cff" stroke="#0a0a0b" stroke-width="2"/>
+        <circle cx="${px}" cy="${y(vb)}" r="3.5" fill="#34d399" stroke="#0a0a0b" stroke-width="2"/>
+        <line x1="${px}" x2="${px}" y1="${P}" y2="${H - P}" stroke="#2a2a31" stroke-dasharray="2 3"/>
+      `;
+      // Position tip in container coordinates
+      const container = document.getElementById('chart');
+      const cw = container.clientWidth;
+      const ch = container.clientHeight;
+      const px_c = (px / W) * cw;
+      const py_c = (py / H) * ch;
+      const fmtA = activeMetric === 'views' ? (va >= 1000 ? (va/1000).toFixed(2) + 'M' : Math.round(va) + 'K') : va.toFixed(2) + '%';
+      const fmtB = activeMetric === 'views' ? (vb >= 1000 ? (vb/1000).toFixed(2) + 'M' : Math.round(vb) + 'K') : vb.toFixed(2) + '%';
+      tip.innerHTML = `
+        <div class="tip-lbl">Day ${i + 1}</div>
+        <div class="tip-val" style="color:#a78bff">● ${fmtA}</div>
+        <div class="tip-val" style="color:#34d399">● ${fmtB}</div>
+      `;
+      tip.style.left = px_c + 'px';
+      tip.style.top = py_c + 'px';
+      tip.classList.add('on');
+    });
+    rect.addEventListener('mouseleave', () => {
+      dot.innerHTML = '';
+      tip.classList.remove('on');
+    });
+  });
+}
+
+/* ---------------- INTERACTIONS ---------------- */
+
+document.querySelectorAll('#metricSeg button').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('#metricSeg button').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+    activeMetric = b.dataset.m;
+    renderChart();
+  });
+});
+
+document.querySelectorAll('#rangeSeg button').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('#rangeSeg button').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+    // Regenerate slight variance for feel
+    Object.keys(chartData).forEach(k => {
+      const base = k === 'views' ? 380 : k === 'eng' ? 6.5 : 2.4;
+      const vol = k === 'views' ? 90 : 1;
+      chartData[k].a = generateSeries(30, base, vol, 4.5);
+      chartData[k].b = generateSeries(30, base * 0.75, vol * 0.85, 3);
+    });
+    renderChart();
+  });
+});
+
+document.querySelectorAll('.nav-item').forEach(n => {
+  n.addEventListener('click', () => {
+    document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
+    n.classList.add('active');
+    if (window.innerWidth < 880) document.body.classList.remove('menu-open');
+  });
+});
+
+// Mobile menu
+document.getElementById('menuBtn').addEventListener('click', e => {
+  e.stopPropagation();
+  document.body.classList.toggle('menu-open');
+});
+document.addEventListener('click', e => {
+  if (!document.body.classList.contains('menu-open')) return;
+  if (!e.target.closest('#sidebar') && !e.target.closest('#menuBtn')) {
+    document.body.classList.remove('menu-open');
+  }
+});
+
+// Cmd+K
+document.addEventListener('keydown', e => {
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+    e.preventDefault();
+    document.querySelector('.search input').focus();
+  }
+});
+
+document.getElementById('newBtn').addEventListener('click', () => toast('Brief created'));
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.add('on');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => t.classList.remove('on'), 2000);
+}
+
+// Re-render chart on resize for accurate tooltip positioning
+let resizeT;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeT);
+  resizeT = setTimeout(renderChart, 120);
+});
+
+/* ---------------- INIT ---------------- */
+renderCreators();
+renderCampaigns();
+renderApprovals();
+renderPayments();
+renderChart();
+</script>
+
+</body>
+</html>
